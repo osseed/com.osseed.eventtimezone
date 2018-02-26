@@ -15,3 +15,4 @@ http://wiki.civicrm.org/confluence/display/CRMDOC42/Extensions
 Usage
 ---------------
 Click Events-> New Event menu --Add timezone to your event.
+Once event is created timezone is displayed at event information page.

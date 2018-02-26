@@ -126,52 +126,41 @@ function eventtimezone_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
 /**
  * Implements hook_civicrm_buildForm().
  */
+function eventtimezone_civicrm_buildForm($formName, &$form) {
+  if($formName == 'CRM_Event_Form_ManageEvent_EventInfo') {
+    $timezone_identifiers = DateTimeZone::listIdentifiers();
+    $options['_none'] = 'Select Timezone';
+    foreach ($timezone_identifiers as $key => $value) {
+      $options[$value] = $value;
+    }
+    $form->add('select', 'timezone', ts('Timezone'), $options);
+    if ($form->_id) {
+      $query = "
+      SELECT timezone FROM civicrm_event WHERE id = $form->_id";
+      $timezone_default = CRM_Core_DAO::singleValueQuery($query);
+      $defaults['timezone'] = $timezone_default;
+      $form->setDefaults($defaults);
+    }
+  }
+}
 
- function eventtimezone_civicrm_buildForm($formName, &$form) {
-   if($formName == 'CRM_Event_Form_ManageEvent_EventInfo') {
-     $timezone_identifiers = DateTimeZone::listIdentifiers();
-     foreach ($timezone_identifiers as $key => $value) {
-       $options[$value] = $value;
-     }
-     $form->add('select', 'timezone', ts('Timezone'), $options);
-     if ($form->_id) {
-       $query = "
-       SELECT timezone FROM civicrm_event WHERE id = $form->_id";
-       $timezone_default = CRM_Core_DAO::singleValueQuery($query);
-       $defaults['timezone'] = $timezone_default;
-       $form->setDefaults($defaults);
-     }
-   }
- }
-
- /**
-  * Implements hook_civicrm_postProcess().
-  */
-
-  function eventtimezone_civicrm_postProcess($formName, &$form) {
-    if ($formName == 'CRM_Event_Form_ManageEvent_EventInfo') {
-      $submit =  $form->getVar('_submitValues');
-      $timezone = $submit['timezone'];
-      if (empty($form->_id) && !empty($submit['timezone'])) {
-        $result = civicrm_api3('Event', 'get', array(
-          'sequential' => 1,
-          'return' => array("id"),
-          'title' => $submit['title'],
-          'event_type_id' => $submit['event_type_id'],
-          'default_role_id' => $submit['default_role_id'],
-        ));
-        if ($result['count'] == 1) {
-          $event_id = $result['values'][0]['id'];
-          $query = "
-          UPDATE civicrm_event
-          SET timezone = '$timezone'
-          WHERE id = $event_id
-          ";
-          CRM_Core_DAO::executeQuery($query);
-        }
-      }
-      else {
-        $event_id = $form->_id;
+/**
+ * Implements hook_civicrm_postProcess().
+ */
+function eventtimezone_civicrm_postProcess($formName, &$form) {
+  if ($formName == 'CRM_Event_Form_ManageEvent_EventInfo') {
+    $submit =  $form->getVar('_submitValues');
+    $timezone = $submit['timezone'];
+    if (empty($form->_id) && !empty($submit['timezone'])) {
+      $result = civicrm_api3('Event', 'get', array(
+        'sequential' => 1,
+        'return' => array("id"),
+        'title' => $submit['title'],
+        'event_type_id' => $submit['event_type_id'],
+        'default_role_id' => $submit['default_role_id'],
+      ));
+      if ($result['count'] == 1) {
+        $event_id = $result['values'][0]['id'];
         $query = "
         UPDATE civicrm_event
         SET timezone = '$timezone'
@@ -180,58 +169,54 @@ function eventtimezone_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
         CRM_Core_DAO::executeQuery($query);
       }
     }
+    else {
+      $event_id = $form->_id;
+      $query = "
+      UPDATE civicrm_event
+      SET timezone = '$timezone'
+      WHERE id = $event_id
+      ";
+      CRM_Core_DAO::executeQuery($query);
+    }
   }
-
-  /**
-   * Implements hook_civicrm_alterContent().
-   */
-
-   function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$object ) {
-     if ($context == 'page' && $tplName == 'CRM/Event/Page/EventInfo.tpl') {
-       $result = civicrm_api3('Event', 'get', array(
-         'sequential' => 1,
-         'return' => array("start_date", "end_date"),
-         'id' => $object->_id,
-       ));
-       $start_date = $result['values'][0]['event_start_date'];
-       $end_date = $result['values'][0]['event_end_date'];
-       // Get event timezone.
-       $query = "
-       SELECT timezone FROM civicrm_event WHERE id = $object->_id";
-       $timezone = CRM_Core_DAO::singleValueQuery($query);
-       // Convert date
-       $start_date_timestamp = new DateTime($start_date, new DateTimeZone($timezone));
-       $start_date_st = date_format($start_date_timestamp, 'M jS Y g:iA T');
-       $content = str_replace("event_start_date", $start_date_st, $content);
-
-       if ($end_date) {
-         $end_date_timestamp = new DateTime($end_date, new DateTimeZone($timezone));
-         $end_date_st = date_format($end_date_timestamp, 'M jS Y g:iA T');
-         $content = str_replace("event_end_date", $end_date_st, $content);
-       }
-     }
-   }
+}
 
 /**
- * Implements hook_civicrm_preProcess().
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_preProcess
+ * Implements hook_civicrm_alterContent().
  */
-// function eventtimezone_civicrm_preProcess($formName, &$form) {
-//     CRM_core_error::debug($formName);
-//     if ($formName == 'CRM_Event_Form_ManageEvent_EventInfo') {
-//
-//
-//       // $submit = $form->getElement('timezone')->getValue();
-//           //  $query = "
-//           //  UPDATE civicrm_event
-//           //  SET timezone = $submit
-//           //  ";
-//           //  $params = array($id, 'Integer');
-//           //  CRM_Core_DAO::executeQuery($query, $params);
-//     }
-//
-// }
+function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$object ) {
+  if ($context == 'page' && $tplName == 'CRM/Event/Page/EventInfo.tpl') {
+    $result = civicrm_api3('Event', 'get', array(
+      'sequential' => 1,
+      'return' => array("start_date", "end_date"),
+      'id' => $object->_id,
+    ));
+    $start_date = $result['values'][0]['event_start_date'];
+    $end_date = $result['values'][0]['event_end_date'];
+    // Get event timezone.
+    $query = "
+    SELECT timezone FROM civicrm_event WHERE id = $object->_id";
+    $timezone = CRM_Core_DAO::singleValueQuery($query);
+    // Convert date
+    if ($timezone != '_none') {
+      $start_date_timestamp = new DateTime($start_date, new DateTimeZone($timezone));
+      $start_date_st = date_format($start_date_timestamp, 'M jS Y g:iA T');
+      $content = str_replace("event_start_date", $start_date_st, $content);
+
+      if ($end_date) {
+        $end_date_timestamp = new DateTime($end_date, new DateTimeZone($timezone));
+        $end_date_st = date_format($end_date_timestamp, 'M jS Y g:iA T');
+        $content = str_replace("event_end_date", $end_date_st, $content);
+      }
+    }
+    else {
+      $content = str_replace("event_start_date", $start_date, $content);
+      if ($end_date) {
+        $content = str_replace("event_end_date", $end_date, $content);
+      }
+    }
+  }
+}
 
 /**
  * Implements hook_civicrm_navigationMenu().
