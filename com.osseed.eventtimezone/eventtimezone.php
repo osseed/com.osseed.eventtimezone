@@ -198,7 +198,7 @@ function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$ob
     SELECT timezone FROM civicrm_event WHERE id = $object->_id";
     $timezone = CRM_Core_DAO::singleValueQuery($query);
     // Convert date
-    if ($timezone != '_none') {
+    if ($timezone != '_none' && !empty($timezone)) {
       $start_date_timestamp = new DateTime($start_date, new DateTimeZone($timezone));
       $start_date_st = date_format($start_date_timestamp, 'M jS Y g:iA T');
       $content = str_replace("event_start_date", $start_date_st, $content);
