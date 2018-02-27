@@ -129,6 +129,7 @@ function eventtimezone_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
 function eventtimezone_civicrm_buildForm($formName, &$form) {
   if($formName == 'CRM_Event_Form_ManageEvent_EventInfo') {
     $timezone_identifiers = DateTimeZone::listIdentifiers(DateTimeZone::AMERICA);
+    $options['_none'] = 'Select Timezone';
     foreach ($timezone_identifiers as $key => $value) {
       $options[$value] = $value;
     }
@@ -197,14 +198,22 @@ function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$ob
     SELECT timezone FROM civicrm_event WHERE id = $object->_id";
     $timezone = CRM_Core_DAO::singleValueQuery($query);
     // Convert date
-    $start_date_timestamp = new DateTime($start_date, new DateTimeZone($timezone));
-    $start_date_st = date_format($start_date_timestamp, 'M jS Y g:iA T');
-    $content = str_replace("event_start_date", $start_date_st, $content);
+    if ($timezone != '_none') {
+      $start_date_timestamp = new DateTime($start_date, new DateTimeZone($timezone));
+      $start_date_st = date_format($start_date_timestamp, 'M jS Y g:iA T');
+      $content = str_replace("event_start_date", $start_date_st, $content);
 
-    if ($end_date) {
-      $end_date_timestamp = new DateTime($end_date, new DateTimeZone($timezone));
-      $end_date_st = date_format($end_date_timestamp, 'M jS Y g:iA T');
-      $content = str_replace("event_end_date", $end_date_st, $content);
+      if ($end_date) {
+        $end_date_timestamp = new DateTime($end_date, new DateTimeZone($timezone));
+        $end_date_st = date_format($end_date_timestamp, 'M jS Y g:iA T');
+        $content = str_replace("event_end_date", $end_date_st, $content);
+      }
+    }
+    else {
+      $content = str_replace("event_start_date", $start_date, $content);
+      if ($end_date) {
+        $content = str_replace("event_end_date", $end_date, $content);
+      }
     }
   }
 }
