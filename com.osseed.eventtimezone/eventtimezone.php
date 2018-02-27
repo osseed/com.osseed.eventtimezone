@@ -210,9 +210,13 @@ function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$ob
       }
     }
     else {
-      $content = str_replace("event_start_date", $start_date, $content);
+      $start_date_con = new DateTime($start_date);
+      $start_date_new = date_format($start_date_con, 'M jS Y g:iA');
+      $content = str_replace("event_start_date", $start_date_new, $content);
       if ($end_date) {
-        $content = str_replace("event_end_date", $end_date, $content);
+        $end_date_con = new DateTime($end_date);
+        $end_date_new = date_format($end_date_con, 'M jS Y g:iA');
+        $content = str_replace("event_end_date", $end_date_new, $content);
       }
     }
   }
