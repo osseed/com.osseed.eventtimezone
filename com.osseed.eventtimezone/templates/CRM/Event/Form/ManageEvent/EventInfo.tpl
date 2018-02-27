@@ -84,6 +84,10 @@
         <td class="label">{$form.end_date.label}</td>
         <td>{include file="CRM/common/jcalendar.tpl" elementName=end_date}</td>
       </tr>
+      <tr class="crm-event-manage-eventinfo-form-block-timezone">
+        <td class="label">{$form.timezone.label}</td>
+        <td>{$form.timezone.html}</td>
+      </tr>
     {/if}
     <tr class="crm-event-manage-eventinfo-form-block-max_participants">
       <td class="label">{$form.max_participants.label} {help id="id-max_participants" waitlist=$waitlist}</td>
@@ -141,10 +145,6 @@
       </td>
     </tr>
     {/if}
-    <tr class="crm-event-manage-eventinfo-form-block-timezone">
-      <td>{$form.timezone.label}</td>
-      <td>{$form.timezone.html}</td>
-    </tr>
     <tr>
       <td>&nbsp;</td>
       <td>&nbsp;</td>
