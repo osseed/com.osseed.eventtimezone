@@ -185,59 +185,63 @@ function eventtimezone_civicrm_postProcess($formName, &$form) {
 }
 
 /**
+ * Implements hook_civicrm_tokens().
+ * @param array $tokens
+*/
+function eventtimezone_civicrm_tokens(&$tokens) {
+  $tokens['event'] = array('timezone' => 'Timezone');
+}
+
+/**
+ * Implements hook_civicrm_tokenValues().
+ * @param array $tokens
+*/
+function eventtimezone_civicrm_tokenValues(&$values, $eventId, $jobID, $tokens, $className) {
+  static $events = array();
+
+  // if (is_numeric($cids)) {
+  //   if ($event_id = CRM_Utils_Array::value('event.event_id', $values)) {
+  //     $values['event.timezone'] = 'BAGHLAY';
+  //     $values['timezone'] = 'BAGHLAY';
+  //   }
+  // }
+}
+/**
+ * Implements hook_civicrm_apiWrappers().
+ */
+function eventtimezone_civicrm_entityTypes(&$entityTypes) {
+  $entityTypes['CRM_Event_DAO_Event']['fields_callback'][]
+    = function ($class, &$fields) {
+      $fields['timezone'] = array(
+         'name' => 'timezone',
+         'type' => CRM_Utils_Type::T_INT,
+         'title' => ts('Timezone') ,
+         'description' => 'Event Timezone',
+         'table_name' => 'civicrm_event',
+         'entity' => 'Event',
+         'bao' => 'CRM_Event_BAO_Event',
+         'localizable' => 0,
+       );
+    };
+}
+
+/**
  * Implements hook_civicrm_alterContent().
  */
 function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$object ) {
   if ($context == 'page' && $tplName == 'CRM/Event/Page/EventInfo.tpl') {
     $result = civicrm_api3('Event', 'get', array(
       'sequential' => 1,
-      'return' => array("start_date", "end_date"),
+      'return' => array("timezone"),
       'id' => $object->_id,
     ));
-    $start_date = $result['values'][0]['event_start_date'];
-    $end_date = $result['values'][0]['event_end_date'];
-    // Get event timezone.
-    $query = "
-    SELECT timezone FROM civicrm_event WHERE id = $object->_id";
-    $timezone = CRM_Core_DAO::singleValueQuery($query);
-    // Convert date
-    if ($timezone != '_none' && !empty($timezone)) {
-      $start_date_timestamp = new DateTime($start_date, new DateTimeZone($timezone));
-      $start_date_st = date_format($start_date_timestamp, 'M jS Y g:iA T');
-      $content = str_replace("event_start_date", $start_date_st, $content);
+    $timezone = $result['values'][0]['timezone'];
 
-      if ($end_date) {
-        $end_date_timestamp = new DateTime($end_date, new DateTimeZone($timezone));
-        $end_date_st = date_format($end_date_timestamp, 'M jS Y g:iA T');
-        $content = str_replace("event_end_date", $end_date_st, $content);
-      }
-    }
-    else {
-      $start_date_con = new DateTime($start_date);
-      $start_date_new = date_format($start_date_con, 'F jS Y g:iA');
-      $content = str_replace("event_start_date", $start_date_new, $content);
-      if ($end_date) {
-        $end_date_con = new DateTime($end_date);
-        $end_date_new = date_format($end_date_con, 'F jS Y g:iA');
-        $content = str_replace("event_end_date", $end_date_new, $content);
-      }
+    if($timezone != '_none' && !empty($timezone)) {
+      // Add timezone besides the date data
+      // #TODO This could be more better by searching for </abbr> with specific class
+      // Like: dtstart and dtend
+      $content = str_replace("</abbr>", " " . $timezone . " </abbr>", $content);
     }
   }
 }
-
-/**
- * Implements hook_civicrm_navigationMenu().
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_navigationMenu
- *
-function eventtimezone_civicrm_navigationMenu(&$menu) {
-  _eventtimezone_civix_insert_navigation_menu($menu, NULL, array(
-    'label' => E::ts('The Page'),
-    'name' => 'the_page',
-    'url' => 'civicrm/the-page',
-    'permission' => 'access CiviReport,access CiviContribute',
-    'operator' => 'OR',
-    'separator' => 0,
-  ));
-  _eventtimezone_civix_navigationMenu($menu);
-} // */
