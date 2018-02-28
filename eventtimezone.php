@@ -185,28 +185,6 @@ function eventtimezone_civicrm_postProcess($formName, &$form) {
 }
 
 /**
- * Implements hook_civicrm_tokens().
- * @param array $tokens
-*/
-function eventtimezone_civicrm_tokens(&$tokens) {
-  $tokens['event'] = array('timezone' => 'Timezone');
-}
-
-/**
- * Implements hook_civicrm_tokenValues().
- * @param array $tokens
-*/
-function eventtimezone_civicrm_tokenValues(&$values, $eventId, $jobID, $tokens, $className) {
-  static $events = array();
-
-  // if (is_numeric($cids)) {
-  //   if ($event_id = CRM_Utils_Array::value('event.event_id', $values)) {
-  //     $values['event.timezone'] = 'BAGHLAY';
-  //     $values['timezone'] = 'BAGHLAY';
-  //   }
-  // }
-}
-/**
  * Implements hook_civicrm_apiWrappers().
  */
 function eventtimezone_civicrm_entityTypes(&$entityTypes) {
