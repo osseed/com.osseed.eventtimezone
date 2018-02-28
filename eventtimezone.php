@@ -128,7 +128,10 @@ function eventtimezone_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
  */
 function eventtimezone_civicrm_buildForm($formName, &$form) {
   if($formName == 'CRM_Event_Form_ManageEvent_EventInfo') {
-    $timezone_identifiers = DateTimeZone::listIdentifiers(DateTimeZone::AMERICA);
+    //$timezone_identifiers = DateTimeZone::listIdentifiers(DateTimeZone::AMERICA);
+     $timezone_identifiers = array(
+       'PST', 'CMT', 'EST', 'MST',
+     );
     $options['_none'] = 'Select Timezone';
     foreach ($timezone_identifiers as $key => $value) {
       $options[$value] = $value;
@@ -211,11 +214,11 @@ function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$ob
     }
     else {
       $start_date_con = new DateTime($start_date);
-      $start_date_new = date_format($start_date_con, 'M jS Y g:iA');
+      $start_date_new = date_format($start_date_con, 'F jS Y g:iA');
       $content = str_replace("event_start_date", $start_date_new, $content);
       if ($end_date) {
         $end_date_con = new DateTime($end_date);
-        $end_date_new = date_format($end_date_con, 'M jS Y g:iA');
+        $end_date_new = date_format($end_date_con, 'F jS Y g:iA');
         $content = str_replace("event_end_date", $end_date_new, $content);
       }
     }
