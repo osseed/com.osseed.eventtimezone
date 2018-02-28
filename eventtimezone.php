@@ -213,6 +213,10 @@ function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$ob
           </td>
         </tr>
         <tr class="crm-event-manage-eventinfo-form-block-start_date">';
+      // Mark the exitsing data as selected
+      if ($timezone != '_none' && !empty($timezone)) {
+        $timezone_field = str_replace('value="'. $timezone . '"', 'value="'. $timezone . '" selected', $timezone_field);
+      }
       // Add timezone field in form after the event end date
       $content = str_replace('<tr class="crm-event-manage-eventinfo-form-block-start_date">', $timezone_field, $content);
     }
