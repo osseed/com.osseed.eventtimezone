@@ -183,16 +183,20 @@ function eventtimezone_civicrm_entityTypes(&$entityTypes) {
  * Implements hook_civicrm_alterContent().
  */
 function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$object ) {
+  CRM_core_error::debug($tplName);
 
   $eventInfoFormContext = ($context == 'form' && $tplName == 'CRM/Event/Form/ManageEvent/EventInfo.tpl');
   $eventInfoPageContext = ($context == 'page' && $tplName == 'CRM/Event/Page/EventInfo.tpl');
+  $eventConfirmFormContext = ($context == 'form' && $tplName == 'CRM/Event/Form/Registration/Confirm.tpl');
+  $eventConfirmPageContext = ($context == 'page' && $tplName == 'CRM/Event/Page/ManageEvent.tpl');
 
-  if ($eventInfoPageContext || $eventInfoFormContext) {
+  if ($eventInfoFormContext || $eventInfoPageContext) {
     $result = civicrm_api3('Event', 'get', array(
       'sequential' => 1,
       'return' => array("timezone"),
       'id' => $object->_id,
     ));
+    CRM_core_error::debug($result);
     $timezone = $result['values'][0]['timezone'];
     if($eventInfoPageContext && $timezone != '_none' && !empty($timezone)) {
       // Add timezone besides the date data
@@ -209,6 +213,44 @@ function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$ob
             	<option value="CMT">CMT</option>
             	<option value="EST">EST</option>
             	<option value="MST">MST</option>
+            </select>
+          </td>
+        </tr>
+        <tr class="crm-event-manage-eventinfo-form-block-start_date">';
+      // Mark the exitsing data as selected
+      if ($timezone != '_none' && !empty($timezone)) {
+        $timezone_field = str_replace('value="'. $timezone . '"', 'value="'. $timezone . '" selected', $timezone_field);
+      }
+      // Add timezone field in form after the event end date
+      $content = str_replace('<tr class="crm-event-manage-eventinfo-form-block-start_date">', $timezone_field, $content);
+    }
+  }
+  elseif ($eventConfirmFormContext || $eventConfirmPageContext) {
+    // CRM_core_error::debug($object);
+    $tid[] = $object->_values;
+    $id = $tid[0]['event']['id'];
+    $result = civicrm_api3('Event', 'get', array(
+      'sequential' => 1,
+      'return' => array("timezone"),
+      'id' => $id,
+    ));
+    // CRM_core_error::debug($result);
+    $timezone = $result['values'][0]['timezone'];
+    if($eventInfoPageContext && $timezone != '_none' && !empty($timezone)) {
+      // Add timezone besides the date data
+      // #TODO This could be more better by searching for </abbr> with specific class
+      // Like: dtstart and dtend
+      $content = str_replace("</abbr>", " " . $timezone . " </abbr>", $content);
+    } elseif ($eventInfoFormContext) {
+      $timezone_field = '<tr class="crm-event-manage-eventinfo-form-block-timezone">
+          <td class="label"><label for="timezone">Timezone</label></td>
+          <td>
+            <select name="timezone" id="timezone" class="crm-form-select">
+              <option value="_none">Select Timezone</option>
+              <option value="PST">PST</option>
+              <option value="CMT">CMT</option>
+              <option value="EST">EST</option>
+              <option value="MST">MST</option>
             </select>
           </td>
         </tr>
