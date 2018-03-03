@@ -183,8 +183,6 @@ function eventtimezone_civicrm_entityTypes(&$entityTypes) {
  * Implements hook_civicrm_alterContent().
  */
 function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$object ) {
-  CRM_core_error::debug($tplName);
-
   $eventInfoFormContext = ($context == 'form' && $tplName == 'CRM/Event/Form/ManageEvent/EventInfo.tpl');
   $eventInfoPageContext = ($context == 'page' && $tplName == 'CRM/Event/Page/EventInfo.tpl');
   $eventConfirmFormContext = ($context == 'form' && $tplName == 'CRM/Event/Form/Registration/Confirm.tpl');
@@ -196,7 +194,6 @@ function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$ob
       'return' => array("timezone"),
       'id' => $object->_id,
     ));
-    CRM_core_error::debug($result);
     $timezone = $result['values'][0]['timezone'];
     if($eventInfoPageContext && $timezone != '_none' && !empty($timezone)) {
       // Add timezone besides the date data
@@ -226,7 +223,6 @@ function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$ob
     }
   }
   elseif ($eventConfirmFormContext || $eventConfirmPageContext) {
-    // CRM_core_error::debug($object);
     $tid[] = $object->_values;
     $id = $tid[0]['event']['id'];
     $result = civicrm_api3('Event', 'get', array(
@@ -234,7 +230,6 @@ function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$ob
       'return' => array("timezone"),
       'id' => $id,
     ));
-    // CRM_core_error::debug($result);
     $timezone = $result['values'][0]['timezone'];
     if($eventInfoPageContext && $timezone != '_none' && !empty($timezone)) {
       // Add timezone besides the date data
