@@ -231,15 +231,18 @@ function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$ob
     $start_date = $result['values'][0]['event_start_date'];
     $end_date = $result['values'][0]['event_end_date'];
     $timezone = $result['values'][0]['timezone'];
-    if($timezone != '_none' && !empty($timezone)) {
+    $start_date_con = new DateTime($start_date);
+    $start_date_st = date_format($start_date_con, 'F jS, Y g:iA');
+    $end_date_con = new DateTime($end_date);
+    $end_date_st = date_format($end_date_con, 'F jS, Y g:iA');
+    if($timezone != '_none' && !empty($timezone && !empty($end_date))) {
       // Add timezone besides the date data
-      // $start_date_con = new DateTime($start_date);
-      // $start_date_st = date_format($start_date_con, 'F jS, Y g:iA');
-      $end_date_con = new DateTime($end_date);
-      $end_date_st = date_format($end_date_con, 'F jS, Y g:iA');
-
-      $content = str_replace("&nbsp; through &nbsp;", "" . $timezone . " through " . $end_date_st . " " . $timezone , $content);
-      // $content = str_replace("<tr><td><label>When</label></td>", $start_date . $timezone . " through " . $end_date_st . " " . $timezone . "</td>", $content);
+      $replacement = "<td width='90%'>" . $start_date_st . " " .  $timezone . " through " . $end_date_st . " " . $timezone . "</td>";
+      $content = preg_replace('#(<td width="90%">)(.*?)(</td>)#si', $replacement, $content);
+    }
+    elseif (empty($end_date)) {
+      $replacement = "<td width='90%'>" . $start_date_st . " " .  $timezone . "</td>";
+      $content = preg_replace('#(<td width="90%">)(.*?)(</td>)#si', $replacement, $content);
     }
   }
 }
