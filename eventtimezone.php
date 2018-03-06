@@ -183,11 +183,12 @@ function eventtimezone_civicrm_entityTypes(&$entityTypes) {
  * Implements hook_civicrm_alterContent().
  */
 function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$object ) {
-
   $eventInfoFormContext = ($context == 'form' && $tplName == 'CRM/Event/Form/ManageEvent/EventInfo.tpl');
   $eventInfoPageContext = ($context == 'page' && $tplName == 'CRM/Event/Page/EventInfo.tpl');
+  $eventConfirmFormContext = ($context == 'form' && $tplName == 'CRM/Event/Form/Registration/Confirm.tpl');
+  $eventConfirmPageContext = ($context == 'form' && $tplName == 'CRM/Event/Form/Registration/ThankYou.tpl');
 
-  if ($eventInfoPageContext || $eventInfoFormContext) {
+  if ($eventInfoFormContext || $eventInfoPageContext) {
     $result = civicrm_api3('Event', 'get', array(
       'sequential' => 1,
       'return' => array("timezone"),
@@ -219,6 +220,29 @@ function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$ob
       }
       // Add timezone field in form after the event end date
       $content = str_replace('<tr class="crm-event-manage-eventinfo-form-block-start_date">', $timezone_field, $content);
+    }
+  }
+  elseif ($eventConfirmFormContext || $eventConfirmPageContext) {
+    $result = $result = civicrm_api3('Event', 'get', array(
+      'sequential' => 1,
+      'return' => array("start_date","end_date", "timezone"),
+      'id' => $object->_eventId,
+    ));
+    $start_date = $result['values'][0]['event_start_date'];
+    $end_date = $result['values'][0]['event_end_date'];
+    $timezone = $result['values'][0]['timezone'];
+    $start_date_con = new DateTime($start_date);
+    $start_date_st = date_format($start_date_con, 'F jS, Y g:iA');
+    $end_date_con = new DateTime($end_date);
+    $end_date_st = date_format($end_date_con, 'F jS, Y g:iA');
+    if($timezone != '_none' && !empty($timezone && !empty($end_date))) {
+      // Add timezone besides the date data
+      $replacement = "<td width='90%'>" . $start_date_st . " " .  $timezone . " through " . $end_date_st . " " . $timezone . "</td>";
+      $content = preg_replace('#(<td width="90%">)(.*?)(</td>)#si', $replacement, $content);
+    }
+    elseif (empty($end_date)) {
+      $replacement = "<td width='90%'>" . $start_date_st . " " .  $timezone . "</td>";
+      $content = preg_replace('#(<td width="90%">)(.*?)(</td>)#si', $replacement, $content);
     }
   }
 }
