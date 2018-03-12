@@ -235,7 +235,7 @@ function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$ob
     $end_date_st = date_format($end_date_con, 'F jS, Y g:iA');
     $end_date = date_format($end_date_con, 'F jS');
 
-    $end_date_time = new DateTime($end_date);
+    $end_date_time = new DateTime($event_end_date);
     $end_time = date_format($end_date_time, 'g:iA');
 
     if($timezone != '_none' && !empty($timezone && !empty($event_end_date))) {
