@@ -255,3 +255,55 @@ function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$ob
     }
   }
 }
+
+/**
+ * Implements hook_civicrm_tokens().
+ */
+function eventtimezone_civicrm_tokens( &$tokens ) {
+  $tokens['timezone'] = array(
+    'timezone.event_timezone' => ts('Event Timezone'),
+    'timezone.start_date_timezone' => ts('Event Start Date with timezone'),
+    'timezone.end_date_timezone' => ts('Event End Date with timezone'),
+  );
+}
+
+function eventtimezone_civicrm_tokenValues(&$values, &$cids, $job = null, $tokens = array(), $context = null) {
+  if(empty($tokens['timezone'])) {
+    return;
+  }
+
+  if (!is_array($cids)) {
+    return;
+  }
+
+  $eventinfo = array(
+    'timezone.event_timezone' => 'timezone.event_timezone' ,
+    'timezone.start_date_timezone' => 'timezone.start_date_timezone',
+    'timezone.end_date_timezone' =>  'timezone.end_date_timezone',
+  );
+
+  foreach ($cids as $cidkey => $cidvalue) {
+    $result = civicrm_api3('Participant', 'get', [
+      'sequential' => 1,
+      'return' => ["event_id"],
+      'contact_id' => $cidvalue,
+    ]);
+
+    foreach($result['values'] as $resultvalue)  {
+      $event_result = civicrm_api3('Event', 'get', [
+        'sequential' => 1,
+        'return' => ["timezone", "start_date", "end_date"],
+        'id' => $resultvalue['event_id'],
+      ]);
+    }
+
+    $start_date_timestamp = new DateTime($event_result['values'][0]['event_start_date'], new DateTimeZone($event_result['values'][0]['timezone']));
+    $start_date_timezone = date_format($start_date_timestamp, 'M jS Y g:iA T');
+    $end_date_timestamp = new DateTime($event_result['values'][0]['event_end_date'], new DateTimeZone($event_result['values'][0]['timezone']));
+    $end_date_timezone = date_format($end_date_timestamp, 'M jS Y g:iA T');
+
+    $values[$cidvalue]['timezone.event_timezone'] = $event_result['values'][0]['timezone'];
+    $values[$cidvalue]['timezone.start_date_timezone'] = $start_date_timezone;
+    $values[$cidvalue]['timezone.end_date_timezone'] = $end_date_timezone;
+  }
+}
