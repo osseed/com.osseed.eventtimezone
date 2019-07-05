@@ -194,7 +194,10 @@ function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$ob
       'return' => array("timezone"),
       'id' => $object->_id,
     ));
-    $timezone = $result['values'][0]['timezone'];
+    if(isset($result['values'][0])){
+      $timezone = $result['values'][0]['timezone'];
+    }
+
     if($eventInfoPageContext && $timezone != '_none' && !empty($timezone)) {
       // Add timezone besides the date data
       $content = str_replace("</abbr>", " " . $timezone . " </abbr>", $content);
@@ -296,14 +299,15 @@ function eventtimezone_civicrm_tokenValues(&$values, &$cids, $job = null, $token
         'id' => $resultvalue['event_id'],
       ]);
     }
+    if(!empty($event_result)){
+      $start_date_timestamp = new DateTime($event_result['values'][0]['event_start_date'], new DateTimeZone($event_result['values'][0]['timezone']));
+      $start_date_timezone = date_format($start_date_timestamp, 'M jS Y g:iA T');
+      $end_date_timestamp = new DateTime($event_result['values'][0]['event_end_date'], new DateTimeZone($event_result['values'][0]['timezone']));
+      $end_date_timezone = date_format($end_date_timestamp, 'M jS Y g:iA T');
 
-    $start_date_timestamp = new DateTime($event_result['values'][0]['event_start_date'], new DateTimeZone($event_result['values'][0]['timezone']));
-    $start_date_timezone = date_format($start_date_timestamp, 'M jS Y g:iA T');
-    $end_date_timestamp = new DateTime($event_result['values'][0]['event_end_date'], new DateTimeZone($event_result['values'][0]['timezone']));
-    $end_date_timezone = date_format($end_date_timestamp, 'M jS Y g:iA T');
-
-    $values[$cidvalue]['timezone.event_timezone'] = $event_result['values'][0]['timezone'];
-    $values[$cidvalue]['timezone.start_date_timezone'] = $start_date_timezone;
-    $values[$cidvalue]['timezone.end_date_timezone'] = $end_date_timezone;
+      $values[$cidvalue]['timezone.event_timezone'] = $event_result['values'][0]['timezone'];
+      $values[$cidvalue]['timezone.start_date_timezone'] = $start_date_timezone;
+      $values[$cidvalue]['timezone.end_date_timezone'] = $end_date_timezone;
+    }
   }
 }
