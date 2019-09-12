@@ -264,7 +264,6 @@ function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$ob
  */
 function eventtimezone_civicrm_tokens( &$tokens ) {
   $tokens['timezone'] = array(
-    'timezone.event_timezone' => ts('Event Timezone'),
     'timezone.start_date_timezone' => ts('Event Start Date with timezone'),
     'timezone.end_date_timezone' => ts('Event End Date with timezone'),
   );
@@ -280,7 +279,6 @@ function eventtimezone_civicrm_tokenValues(&$values, &$cids, $job = null, $token
   }
 
   $eventinfo = array(
-    'timezone.event_timezone' => 'timezone.event_timezone' ,
     'timezone.start_date_timezone' => 'timezone.start_date_timezone',
     'timezone.end_date_timezone' =>  'timezone.end_date_timezone',
   );
@@ -300,12 +298,16 @@ function eventtimezone_civicrm_tokenValues(&$values, &$cids, $job = null, $token
       ]);
     }
     if(!empty($event_result)){
-      $start_date_timestamp = new DateTime($event_result['values'][0]['event_start_date'], new DateTimeZone($event_result['values'][0]['timezone']));
+      $timeZone = $event_result['values'][0]['timezone'];
+      //Set default site timezone if event timezone field is not set.
+      if ($event_result['values'][0]['timezone'] == '_none') {
+        $timeZone = date_default_timezone_get();
+      }
+      $start_date_timestamp = new DateTime($event_result['values'][0]['event_start_date'], new DateTimeZone($timeZone));
       $start_date_timezone = date_format($start_date_timestamp, 'M jS Y g:iA T');
-      $end_date_timestamp = new DateTime($event_result['values'][0]['event_end_date'], new DateTimeZone($event_result['values'][0]['timezone']));
+      $end_date_timestamp = new DateTime($event_result['values'][0]['event_end_date'], new DateTimeZone($timeZone));
       $end_date_timezone = date_format($end_date_timestamp, 'M jS Y g:iA T');
 
-      $values[$cidvalue]['timezone.event_timezone'] = $event_result['values'][0]['timezone'];
       $values[$cidvalue]['timezone.start_date_timezone'] = $start_date_timezone;
       $values[$cidvalue]['timezone.end_date_timezone'] = $end_date_timezone;
     }
