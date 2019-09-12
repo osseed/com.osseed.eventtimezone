@@ -194,7 +194,10 @@ function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$ob
       'return' => array("timezone"),
       'id' => $object->_id,
     ));
-    $timezone = $result['values'][0]['timezone'];
+    if(isset($result['values'][0])){
+      $timezone = $result['values'][0]['timezone'];
+    }
+
     if($eventInfoPageContext && $timezone != '_none' && !empty($timezone)) {
       // Add timezone besides the date data
       $content = str_replace("</abbr>", " " . $timezone . " </abbr>", $content);
@@ -261,7 +264,6 @@ function eventtimezone_civicrm_alterContent( &$content, $context, $tplName, &$ob
  */
 function eventtimezone_civicrm_tokens( &$tokens ) {
   $tokens['timezone'] = array(
-    'timezone.event_timezone' => ts('Event Timezone'),
     'timezone.start_date_timezone' => ts('Event Start Date with timezone'),
     'timezone.end_date_timezone' => ts('Event End Date with timezone'),
   );
@@ -275,12 +277,6 @@ function eventtimezone_civicrm_tokenValues(&$values, &$cids, $job = null, $token
   if (!is_array($cids)) {
     return;
   }
-
-  $eventinfo = array(
-    'timezone.event_timezone' => 'timezone.event_timezone' ,
-    'timezone.start_date_timezone' => 'timezone.start_date_timezone',
-    'timezone.end_date_timezone' =>  'timezone.end_date_timezone',
-  );
 
   foreach ($cids as $cidkey => $cidvalue) {
     $result = civicrm_api3('Participant', 'get', [
@@ -296,14 +292,20 @@ function eventtimezone_civicrm_tokenValues(&$values, &$cids, $job = null, $token
         'id' => $resultvalue['event_id'],
       ]);
     }
+    if(!empty($event_result['values'])){
+      $timeZone = $event_result['values'][0]['timezone'];
+      // Set default site timezone if event timezone field is not set.
+      if ($event_result['values'][0]['timezone'] == '_none') {
+        $timeZone = date_default_timezone_get();
+      }
+      $startDateTimestamp = new DateTime($event_result['values'][0]['event_start_date'], new DateTimeZone($timeZone));
+      $startDateTimezoneFormat = date_format($startDateTimestamp, 'M jS Y g:iA T');
+      $endDateTimestamp = new DateTime($event_result['values'][0]['event_end_date'], new DateTimeZone($timeZone));
+      $endDateTimezoneFormat = date_format($endDateTimestamp, 'M jS Y g:iA T');
 
-    $start_date_timestamp = new DateTime($event_result['values'][0]['event_start_date'], new DateTimeZone($event_result['values'][0]['timezone']));
-    $start_date_timezone = date_format($start_date_timestamp, 'M jS Y g:iA T');
-    $end_date_timestamp = new DateTime($event_result['values'][0]['event_end_date'], new DateTimeZone($event_result['values'][0]['timezone']));
-    $end_date_timezone = date_format($end_date_timestamp, 'M jS Y g:iA T');
-
-    $values[$cidvalue]['timezone.event_timezone'] = $event_result['values'][0]['timezone'];
-    $values[$cidvalue]['timezone.start_date_timezone'] = $start_date_timezone;
-    $values[$cidvalue]['timezone.end_date_timezone'] = $end_date_timezone;
+      // Set format for start & end date timezone tokens.
+      $values[$cidvalue]['timezone.start_date_timezone'] = $startDateTimezoneFormat;
+      $values[$cidvalue]['timezone.end_date_timezone'] = $endDateTimezoneFormat;
+    }
   }
 }
